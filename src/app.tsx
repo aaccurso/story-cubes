@@ -1,22 +1,86 @@
+import { ShapeProps } from '@mirohq/websdk-types';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 import {randomizeDice, NUMBER_OF_DICE} from "./dice";
 
-async function addDieToBoard() {
-  const dice = randomizeDice(1)
+async function addDieToBoard(die: Partial<ShapeProps>) {
   const shape = await miro.board.createShape({
-    content: dice[0],
     shape: 'round_rectangle',
-    width: 35,
-    height: 35,
+    ...die,
     style: {
-      fillColor: '#FFFFFF',
-      fontFamily: 'arial',
-      fontSize: 24,
-      textAlign: 'center',
-      textAlignVertical: 'bottom',
+      fillColor: "#ffffff",
+      fontFamily: "arial",
+      fontSize: 148,
+      textAlign: "center",
+      textAlignVertical: "bottom",
+      ...die.style,
     },
   })
+}
+
+type Coord = {
+  x: number,
+  y: number,
+}
+async function addDiceToBoard(start: Coord, faces: string[], dicePerSide: number, diceSize: number, diceSpacing: number) {
+  faces.forEach((face, index) => {
+    const row = Math.floor(index / dicePerSide)
+    const col = Math.floor(index % dicePerSide)
+
+    console.log('row', row)
+
+    const positionCorrection = -((dicePerSide-1)*diceSize + (dicePerSide-1)*diceSpacing)/2
+
+    const position: Coord = {
+      x: start.x + diceSize * col + diceSpacing * col + positionCorrection,
+      y: start.y + diceSize * row + diceSpacing * row + positionCorrection,
+    }
+
+    console.log('position', position)
+
+    addDieToBoard({
+      ...position,
+      content: face,
+      width: diceSize,
+      height: diceSize,
+      style: {
+        fontSize: Math.round(diceSize * 148/215)
+      }
+    })
+  });
+}
+
+async function rollDice(numberOfDice: number) {
+  console.log(`Rolling ${numberOfDice} Dice'`)
+
+  const selection = await miro.board.getSelection();
+
+  console.log('SELECTION', selection)
+
+  if (selection.length !== 1) {
+    console.error('need to select exactly 1 container')
+    return
+  }
+  const container = selection[0]
+  if (container.type !== 'shape') {
+    console.error('container needs to be a shape')
+    return
+  }
+
+
+  // const faces: string[] = ['🐶', '🐶', '🐶', '🐶', '🐶', '🐶', '🐶', '🐶', '🐶'] //randomize(9);g
+  const faces = randomizeDice(numberOfDice)
+
+  const dicePerSide = Math.ceil(Math.sqrt(numberOfDice))
+  const diceSize = Math.min(container.height, container.width)/(dicePerSide*2)
+  const diceSpacing = diceSize/3
+
+  const start: Coord = {
+    x: container.x,
+    y: container.y,
+  }
+
+  addDiceToBoard(start, faces, dicePerSide, diceSize, diceSpacing)
 }
 
 function App() {
@@ -24,10 +88,9 @@ function App() {
   const handleSelectNumberOfDice = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedNumberOfDice(event.target.value)
   }
-  // TODO: uncomment when addDieToBoard supports number of dice
-  // const handleAddDieToBoard = () => {
-  //   addDieToBoard(parseInt(selectedNumberOfDice, 10))
-  // }
+  const handleRollDice = () => {
+    rollDice(parseInt(selectedNumberOfDice, 10))
+  }
 
   return (
     <div className="grid wrapper">
@@ -46,7 +109,7 @@ function App() {
       <div className="cs1 ce12">
         <button
           className="button button-primary"
-          onClick={addDieToBoard}
+          onClick={handleRollDice}
         >
           Roll dice
         </button>
