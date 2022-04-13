@@ -3,6 +3,21 @@ import * as React from 'react';
 import ReactDOM from 'react-dom';
 import {randomizeDice, NUMBER_OF_DICE} from "./dice";
 
+function projectLocalToGlobalCoord(frame: Frame, coord: Coord) {
+  return {
+    x: (frame.x - frame.width/2) + coord.x,
+    y: (frame.y - frame.height/2) + coord.y,
+  }
+}
+
+// DOES IT WORK?
+function projectGlobalToLocalCoord(frame: Frame, coord: Coord) {
+  return {
+    x: coord.x - (frame.x - frame.width/2),
+    y: coord.y - (frame.y - frame.height/2),
+  }
+}
+
 async function addDieToBoard(die: Partial<ShapeProps>) {
   const shape = await miro.board.createShape({
     shape: 'round_rectangle',
@@ -75,12 +90,7 @@ async function rollDice(numberOfDice: number) {
   if (container.parentId) {
     parent = await miro.board.getById(container.parentId) as Frame
 
-    start = {
-      // x: container.x + parent.x - parent.x/2,
-      x: parent.x - parent.width/2 + container.x,
-      // y: container.y + parent.y - parent.y/2,
-      y: parent.y - parent.height/2 + container.y,
-    }
+    start = projectLocalToGlobalCoord(parent, start)
   }
 
   addDiceToBoard(start, faces, dicePerSide, diceSize, diceSpacing, parent)
