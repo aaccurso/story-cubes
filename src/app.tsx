@@ -1,18 +1,23 @@
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 
-async function addSticky() {
-  // const stickyNote = await miro.board.createStickyNote({
-  //   content: 'Hello, World!',
-  // });
-
-  // await miro.board.viewport.zoomTo(stickyNote);
+async function addDieToBoard() {
+  const shape = await miro.board.createShape({
+    content: '😅',
+    shape: 'round_rectangle',
+    width: 35,
+    height: 35,
+    style: {
+      fillColor: '#FFFFFF',
+      fontFamily: 'arial',
+      fontSize: 24,
+      textAlign: 'center',
+      textAlignVertical: 'bottom',
+    },
+  })
 }
 
 function App() {
-  React.useEffect(() => {
-    addSticky();
-  }, []);
 
   return (
     <div className="grid wrapper">
@@ -23,6 +28,7 @@ function App() {
       <div className="cs1 ce12">
         <button
           className="button button-primary"
+          onClick={addDieToBoard}
         >
           Roll dice
         </button>
