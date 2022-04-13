@@ -2,11 +2,11 @@ import * as React from 'react';
 import ReactDOM from 'react-dom';
 
 async function addSticky() {
-  const stickyNote = await miro.board.createStickyNote({
-    content: 'Hello, World!',
-  });
+  // const stickyNote = await miro.board.createStickyNote({
+  //   content: 'Hello, World!',
+  // });
 
-  await miro.board.viewport.zoomTo(stickyNote);
+  // await miro.board.viewport.zoomTo(stickyNote);
 }
 
 function App() {
@@ -17,24 +17,15 @@ function App() {
   return (
     <div className="grid wrapper">
       <div className="cs1 ce12">
-        <img src="/src/assets/congratulations.png" alt="" />
+        <h1>How to play</h1>
+        <p>Click on "Roll dice", and use the dice to tell a story</p>
       </div>
       <div className="cs1 ce12">
-        <h1>Congratulations!</h1>
-        <p>You've just created your first Miro app!</p>
-        <p>
-          To explore more and build your own app, see the Miro Developer
-          Platform documentation.
-        </p>
-      </div>
-      <div className="cs1 ce12">
-        <a
+        <button
           className="button button-primary"
-          target="_blank"
-          href="https://beta.developers.miro.com"
         >
-          Read the documentation
-        </a>
+          Roll dice
+        </button>
       </div>
     </div>
   );
