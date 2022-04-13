@@ -1,4 +1,4 @@
-import { ShapeProps } from '@mirohq/websdk-types';
+import { BoardNode, Frame, ShapeProps } from '@mirohq/websdk-types';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 import {randomizeDice, NUMBER_OF_DICE} from "./dice";
@@ -16,14 +16,16 @@ async function addDieToBoard(die: Partial<ShapeProps>) {
       ...die.style,
     },
   })
+
+  return shape
 }
 
 type Coord = {
   x: number,
   y: number,
 }
-async function addDiceToBoard(start: Coord, faces: string[], dicePerSide: number, diceSize: number, diceSpacing: number) {
-  faces.forEach((face, index) => {
+async function addDiceToBoard(start: Coord, faces: string[], dicePerSide: number, diceSize: number, diceSpacing: number, parent?: BoardNode) {
+  faces.forEach(async (face, index) => {
     const row = Math.floor(index / dicePerSide)
     const col = Math.floor(index % dicePerSide)
 
@@ -34,20 +36,22 @@ async function addDiceToBoard(start: Coord, faces: string[], dicePerSide: number
       y: start.y + diceSize * row + diceSpacing * row + positionCorrection,
     }
 
-    addDieToBoard({
+    console.log('die position', position)
+
+    const die = await addDieToBoard({
       ...position,
       content: face,
       width: diceSize,
       height: diceSize,
       style: {
         fontSize: Math.round(diceSize * 148/215)
-      }
+      },
     })
   });
 }
 
 async function rollDice(numberOfDice: number) {
-  console.log(`Rolling ${numberOfDice} Dice'`)
+  console.log(`Rolling ${numberOfDice} Dice`)
 
   const container = await getContainer()
 
@@ -62,12 +66,24 @@ async function rollDice(numberOfDice: number) {
   const diceSize = Math.min(container.height, container.width)/(dicePerSide*2)
   const diceSpacing = diceSize/3
 
-  const start: Coord = {
+  let start: Coord = {
     x: container.x,
     y: container.y,
   }
 
-  addDiceToBoard(start, faces, dicePerSide, diceSize, diceSpacing)
+  let parent: Frame | undefined
+  if (container.parentId) {
+    parent = await miro.board.getById(container.parentId) as Frame
+
+    start = {
+      // x: container.x + parent.x - parent.x/2,
+      x: parent.x - parent.width/2 + container.x,
+      // y: container.y + parent.y - parent.y/2,
+      y: parent.y - parent.height/2 + container.y,
+    }
+  }
+
+  addDiceToBoard(start, faces, dicePerSide, diceSize, diceSpacing, parent)
 }
 
 async function getContainer () {
@@ -84,11 +100,18 @@ async function getContainer () {
     y2: viewport.y + viewport.height,
   }
   const widgets = await miro.board.get({ type: 'shape' })
-  const container = widgets.find(widget =>
-    widget.x >= view.x1 && widget.x <= view.x2
-    && widget.y >= view.y1 && widget.y <= view.y2
-    && widget.shape === 'cloud'
-  )
+  const container = widgets.find(async widget => {
+    if (widget.shape !== 'cloud') {
+      return false
+    }
+    let element: BoardNode | Frame = widget
+    if (element.parentId) {
+      element = await miro.board.getById(element.parentId) as Frame
+    }
+
+    return element.x >= view.x1 && element.x <= view.x2
+    && element.y >= view.y1 && element.y <= view.y2
+  })
 
   console.log('viewport', viewport)
   console.log('view', view)
