@@ -27,16 +27,12 @@ async function addDiceToBoard(start: Coord, faces: string[], dicePerSide: number
     const row = Math.floor(index / dicePerSide)
     const col = Math.floor(index % dicePerSide)
 
-    console.log('row', row)
-
     const positionCorrection = -((dicePerSide-1)*diceSize + (dicePerSide-1)*diceSpacing)/2
 
     const position: Coord = {
       x: start.x + diceSize * col + diceSpacing * col + positionCorrection,
       y: start.y + diceSize * row + diceSpacing * row + positionCorrection,
     }
-
-    console.log('position', position)
 
     addDieToBoard({
       ...position,
@@ -53,17 +49,21 @@ async function addDiceToBoard(start: Coord, faces: string[], dicePerSide: number
 async function rollDice(numberOfDice: number) {
   console.log(`Rolling ${numberOfDice} Dice'`)
 
-  const selection = await miro.board.getSelection();
+  const container = await getContainer()
 
-  console.log('SELECTION', selection)
 
-  if (selection.length !== 1) {
-    console.error('need to select exactly 1 container')
-    return
-  }
-  const container = selection[0]
-  if (container.type !== 'shape') {
-    console.error('container needs to be a shape')
+
+  // const selection = await miro.board.getSelection();
+
+  // console.log('SELECTION', selection)
+
+  // if (selection.length !== 1) {
+  //   console.error('need to select exactly 1 container')
+  //   return
+  // }
+  // const container = selection[0]
+  if (!container) {
+    console.error('container not found')
     return
   }
 
@@ -81,6 +81,29 @@ async function rollDice(numberOfDice: number) {
   }
 
   addDiceToBoard(start, faces, dicePerSide, diceSize, diceSpacing)
+}
+
+async function getContainer () {
+  const viewport = await miro.board.viewport.get()
+  const view = {
+    x1: viewport.x ,
+    x2: viewport.x + viewport.width,
+    y1: viewport.y,
+    y2: viewport.y + viewport.height,
+  }
+  const widgets = await miro.board.get({ type: 'shape' })
+  const container = widgets.find(widget =>
+    widget.x >= view.x1 && widget.x <= view.x2
+    && widget.y >= view.y1 && widget.y <= view.y2
+    && widget.shape === 'cloud'
+  )
+
+  console.log('viewport', viewport)
+  console.log('view', view)
+  console.log('widgets', widgets)
+  console.log('container', container)
+
+  return container
 }
 
 function App() {
