@@ -33,7 +33,7 @@ for (let i = 0; i < NUMBER_OF_DICE; i++) {
 export const randomizeDice = (numberOfDice: number = 1, diceSet: DiceSet = RANDOM_EMOJI_DICE_SET): Array<string> => {
   const result = []
   for (let i = 0; i < numberOfDice; i++) {
-    const randomFace = Math.ceil(Math.random() * NUMBER_OF_FACES)
+    const randomFace = Math.floor(Math.random() * NUMBER_OF_FACES)
     result.push(diceSet[i][randomFace])
   }
   return result
