@@ -51,24 +51,11 @@ async function rollDice(numberOfDice: number) {
 
   const container = await getContainer()
 
-
-
-  // const selection = await miro.board.getSelection();
-
-  // console.log('SELECTION', selection)
-
-  // if (selection.length !== 1) {
-  //   console.error('need to select exactly 1 container')
-  //   return
-  // }
-  // const container = selection[0]
   if (!container) {
     console.error('container not found')
     return
   }
 
-
-  // const faces: string[] = ['🐶', '🐶', '🐶', '🐶', '🐶', '🐶', '🐶', '🐶', '🐶'] //randomize(9);g
   const faces = randomizeDice(numberOfDice)
 
   const dicePerSide = Math.ceil(Math.sqrt(numberOfDice))
@@ -84,6 +71,11 @@ async function rollDice(numberOfDice: number) {
 }
 
 async function getContainer () {
+  const selection = await miro.board.getSelection()
+  if (selection.length === 1 && selection[0].type === 'shape' && selection[0].shape === 'cloud') {
+    return selection[0]
+  }
+
   const viewport = await miro.board.viewport.get()
   const view = {
     x1: viewport.x ,
