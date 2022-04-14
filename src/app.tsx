@@ -1,7 +1,9 @@
-import { BoardNode, Frame, ShapeProps } from '@mirohq/websdk-types';
+import {BoardNode, Frame,ShapeProps} from '@mirohq/websdk-types';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
-import {randomizeDice, NUMBER_OF_DICE} from "./dice";
+import {NUMBER_OF_DICE, randomizeDice} from "./dice";
+import {Variants} from "./variants";
+import {useVariants} from "./useVariants";
 
 function projectLocalToGlobalCoord(frame: Frame, coord: Coord) {
   return {
@@ -132,34 +134,40 @@ async function getContainer () {
 }
 
 function App() {
-  const [selectedNumberOfDice, setSelectedNumberOfDice] = React.useState(NUMBER_OF_DICE.toString())
-  const handleSelectNumberOfDice = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedNumberOfDice(event.target.value)
-  }
   const handleRollDice = () => {
-    rollDice(parseInt(selectedNumberOfDice, 10))
+    rollDice(NUMBER_OF_DICE)
   }
+  const {
+    variantParticipants,
+    selectedNumberOfParticipants,
+    handleSelectedNumberOfParticipants,
+    selectedVariant,
+    handleSelectVariant
+  } = useVariants();
 
   return (
     <div className="grid wrapper">
       <div className="cs1 ce12">
-        <h1>How to play</h1>
-        <p>Click on "Roll dice", and use the dice to tell a story</p>
+        <p>Dice breaker is an icebreaker where player randomly are given some graphic to make up a story out of it. To set it up, follow the steps below:</p>
       </div>
       <div className="cs1 ce12">
-        <p>Choose the amount of dice to roll:</p>
-        <select className="select" onChange={handleSelectNumberOfDice} value={selectedNumberOfDice}>
-          {new Array(NUMBER_OF_DICE).fill(undefined).map((_, index) => (
-            <option value={index + 1}>{index + 1}</option>
+        <p>1. Choose the amount of players you want:</p>
+        <select className="select" onChange={handleSelectedNumberOfParticipants} value={selectedNumberOfParticipants}>
+          {variantParticipants.map((value) => (
+            <option key={value} value={value}>{value}</option>
           ))}
         </select>
       </div>
       <div className="cs1 ce12">
+        <Variants selectedVariant={selectedVariant} onSelectVariant={handleSelectVariant}/>
+      </div>
+      <div className="cs1 ce12">
+        <p>3. Hit the button and you can start playing now!</p>
         <button
           className="button button-primary"
           onClick={handleRollDice}
         >
-          Roll dice
+          Play the dice!
         </button>
       </div>
     </div>
