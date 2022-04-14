@@ -47,6 +47,11 @@ img {
   padding: 3px;
   border-radius: 4px;
   border: 3px solid transparent;
+  width: 33.3%;
+}
+
+.carousel_item > img {
+  display: block;
 }
 
 .carousel_item-selected {
