@@ -7,7 +7,7 @@ function onlyUnique(value: any, index: number, self: any[]) {
 
 export function useVariants() {
   const [variants, setVariants] = React.useState<Array<IVariant>>([])
-  const variantParticipants: Array<number> = variants.map(({variantParticipants}) => parseInt(variantParticipants, 10)).filter(onlyUnique)
+  const variantParticipants: Array<number> = variants.map(({variantParticipants}) => parseInt(variantParticipants, 10)).filter(onlyUnique).sort()
   const variantWays: Array<number> = variants.map(({variantWay}) => parseInt(variantWay, 10)).filter(onlyUnique)
   console.log(`Variants found`, variantParticipants, variantWays)
   const [selectedNumberOfParticipants, setSelectedNumberOfParticipants] = React.useState(Math.max(...variantParticipants))

@@ -1,25 +1,25 @@
 import {emojis} from './emojis'
 
+type DiceSet = Array<Array<string>>
+
+export const INITIAL_SET: DiceSet = [
+  ['🥶','😨','😭','😁','😆','😅'],
+  ['😈','🎅','🤶','💩','👻','👽'],
+  ['🐱','🐵','🦄','🐷','🐶','🐰'],
+  ['🍇','🥥','🥑','🍆','🍋','🍌'],
+  ['🏔','🌼','🌋','🎡','🏕','🏖'],
+  ['🎃','🎄','🎆','💥','🧨','✨'],
+  ['🚂','🏎','🚑','🚒','🚓','🚗'],
+  ['🌙','🌡','🌞','⭐','⛈','🌪'],
+  ['🎥','🪓','🎬','🤺','📷','🗡'],
+]
+
 const getRandomEmoji = () => {
   return emojis[~~(Math.random() * emojis.length)]
 }
 
 export const NUMBER_OF_FACES = 6
 export const NUMBER_OF_DICE = 9
-
-type DiceSet = Array<Array<string>>
-
-export const INITIAL_SET: DiceSet = [
-  ['😀','😃','😄','😁','😆','😅'],
-  ['👼','🎅','🤶','🧑‍🎄','🦸','🦸‍♂️'],
-  ['🐵','🐒','🦍','🦧','🐶','🐕'],
-  ['🍇','🍈','🍉','🍊','🍋','🍌'],
-  ['🏔','⛰','🌋','🗻','🏕','🏖'],
-  ['🎃','🎄','🎆','🎇','🧨','✨'],
-  ['👓','🕶','🥽','🥼','🦺','👔'],
-  ['🎥','🎞','📽','🎬','📺','📷'],
-  ['🔨','🪓','⛏','⚒','🛠','🗡'],
-]
 
 const RANDOM_EMOJI_DICE_SET: DiceSet = []
 
@@ -30,7 +30,7 @@ for (let i = 0; i < NUMBER_OF_DICE; i++) {
   }
 }
 
-export const randomizeDice = (numberOfDice: number = 1, diceSet: DiceSet = RANDOM_EMOJI_DICE_SET): Array<string> => {
+export const randomizeDice = (numberOfDice: number = 1, diceSet: DiceSet = INITIAL_SET): Array<string> => {
   const result = []
   for (let i = 0; i < numberOfDice; i++) {
     const randomFace = Math.floor(Math.random() * NUMBER_OF_FACES)
