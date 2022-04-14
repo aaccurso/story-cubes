@@ -178,7 +178,7 @@ function App() {
           className="button button-primary"
           onClick={handleRollDice}
         >
-          Play the dice!
+          Roll the dice!
         </button>
       </div>
     </div>
