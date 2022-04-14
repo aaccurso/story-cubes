@@ -1,9 +1,29 @@
-import {BoardNode, Frame,ShapeProps} from '@mirohq/websdk-types';
+import {BoardNode, Frame,Shape,ShapeProps} from '@mirohq/websdk-types';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 import {NUMBER_OF_DICE, randomizeDice} from "./dice";
 import {Variants} from "./variants";
 import {useVariants} from "./useVariants";
+
+
+type Coord = {
+  x: number,
+  y: number,
+}
+type Area = {
+  x: number,
+  y: number,
+  height: number,
+  width: number,
+}
+
+// area's origin must be top-left
+function isCoordInArea(coord: Coord, area: Area): boolean {
+  return coord.x >= area.x
+    && coord.x <= area.x + area.width
+    && coord.y >= area.y
+    && coord.y <= area.y + area.height
+}
 
 function projectLocalToGlobalCoord(frame: Frame, coord: Coord) {
   return {
@@ -13,6 +33,7 @@ function projectLocalToGlobalCoord(frame: Frame, coord: Coord) {
 }
 
 // DOES IT WORK?
+// note: may not be possible
 function projectGlobalToLocalCoord(frame: Frame, coord: Coord) {
   return {
     x: coord.x - (frame.x - frame.width/2),
@@ -20,57 +41,12 @@ function projectGlobalToLocalCoord(frame: Frame, coord: Coord) {
   }
 }
 
-async function addDieToBoard(die: Partial<ShapeProps>) {
-  const shape = await miro.board.createShape({
-    shape: 'round_rectangle',
-    ...die,
-    style: {
-      fillColor: "#ffffff",
-      fontFamily: "arial",
-      fontSize: 148,
-      textAlign: "center",
-      textAlignVertical: "bottom",
-      ...die.style,
-    },
-  })
-
-  return shape
-}
-
-type Coord = {
-  x: number,
-  y: number,
-}
-async function addDiceToBoard(start: Coord, faces: string[], dicePerSide: number, diceSize: number, diceSpacing: number, parent?: BoardNode) {
-  faces.forEach(async (face, index) => {
-    const row = Math.floor(index / dicePerSide)
-    const col = Math.floor(index % dicePerSide)
-
-    const positionCorrection = -((dicePerSide-1)*diceSize + (dicePerSide-1)*diceSpacing)/2
-
-    const position: Coord = {
-      x: start.x + diceSize * col + diceSpacing * col + positionCorrection,
-      y: start.y + diceSize * row + diceSpacing * row + positionCorrection,
-    }
-
-    console.log('die position', position)
-
-    const die = await addDieToBoard({
-      ...position,
-      content: face,
-      width: diceSize,
-      height: diceSize,
-      style: {
-        fontSize: Math.round(diceSize * 148/215)
-      },
-    })
-  });
-}
 
 async function rollDice(numberOfDice: number) {
   console.log(`Rolling ${numberOfDice} Dice`)
 
   const container = await getContainer()
+  console.log('got container', container)
 
   if (!container) {
     console.error('container not found')
@@ -98,39 +74,81 @@ async function rollDice(numberOfDice: number) {
   addDiceToBoard(start, faces, dicePerSide, diceSize, diceSpacing, parent)
 }
 
-async function getContainer () {
+async function getContainer (): Promise<Shape | undefined> {
+  console.log('getting container')
   const selection = await miro.board.getSelection()
+
+  // If a cloud is selected, use it
   if (selection.length === 1 && selection[0].type === 'shape' && selection[0].shape === 'cloud') {
     return selection[0]
   }
 
   const viewport = await miro.board.viewport.get()
-  const view = {
-    x1: viewport.x ,
-    x2: viewport.x + viewport.width,
-    y1: viewport.y,
-    y2: viewport.y + viewport.height,
-  }
   const widgets = await miro.board.get({ type: 'shape' })
   const container = widgets.find(async widget => {
     if (widget.shape !== 'cloud') {
       return false
     }
-    let element: BoardNode | Frame = widget
-    if (element.parentId) {
-      element = await miro.board.getById(element.parentId) as Frame
+
+    let containerCoord: Coord = widget;
+
+    if (widget.parentId) {
+      const parent = await miro.board.getById(widget.parentId) as Frame
+      containerCoord = projectLocalToGlobalCoord(parent, containerCoord)
     }
 
-    return element.x >= view.x1 && element.x <= view.x2
-    && element.y >= view.y1 && element.y <= view.y2
+    return isCoordInArea(containerCoord, viewport)
   })
 
   console.log('viewport', viewport)
-  console.log('view', view)
   console.log('widgets', widgets)
   console.log('container', container)
 
   return container
+}
+
+
+async function addDiceToBoard(start: Coord, faces: string[], dicePerSide: number, diceSize: number, diceSpacing: number, parent?: BoardNode) {
+  faces.forEach(async (face, index) => {
+    const row = Math.floor(index / dicePerSide)
+    const col = Math.floor(index % dicePerSide)
+
+    const positionCorrection = -((dicePerSide-1)*diceSize + (dicePerSide-1)*diceSpacing)/2
+
+    const position: Coord = {
+      x: start.x + diceSize * col + diceSpacing * col + positionCorrection,
+      y: start.y + diceSize * row + diceSpacing * row + positionCorrection,
+    }
+
+    console.log('die position', position)
+
+    const die = await addDieToBoard({
+      ...position,
+      content: face,
+      width: diceSize,
+      height: diceSize,
+      style: {
+        fontSize: Math.round(diceSize * 148/215)
+      },
+    })
+  });
+}
+
+async function addDieToBoard(die: Partial<ShapeProps>) {
+  const shape = await miro.board.createShape({
+    shape: 'round_rectangle',
+    ...die,
+    style: {
+      fillColor: "#ffffff",
+      fontFamily: "arial",
+      fontSize: 148,
+      textAlign: "center",
+      textAlignVertical: "bottom",
+      ...die.style,
+    },
+  })
+
+  return shape
 }
 
 function App() {
