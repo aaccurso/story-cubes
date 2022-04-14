@@ -46,7 +46,6 @@ async function rollDice(numberOfDice: number) {
   console.log(`Rolling ${numberOfDice} Dice`)
 
   const container = await getContainer()
-  console.log('got container', container)
 
   if (!container) {
     console.error('container not found')
@@ -85,28 +84,22 @@ async function getContainer (): Promise<Shape | undefined> {
 
   const viewport = await miro.board.viewport.get()
   const widgets = await miro.board.get({ type: 'shape' })
-  const container = widgets.find(async widget => {
-    if (widget.shape !== 'cloud') {
-      return false
+
+  for (let widget of widgets) {
+    if (widget.shape === 'cloud') {
+      let containerCoord: Coord = widget;
+
+      if (widget.parentId) {
+        const parent = await miro.board.getById(widget.parentId) as Frame
+        containerCoord = projectLocalToGlobalCoord(parent, containerCoord)
+      }
+
+      const isInViewport = isCoordInArea(containerCoord, viewport)
+
+      if (isInViewport) return widget
     }
-
-    let containerCoord: Coord = widget;
-
-    if (widget.parentId) {
-      const parent = await miro.board.getById(widget.parentId) as Frame
-      containerCoord = projectLocalToGlobalCoord(parent, containerCoord)
-    }
-
-    return isCoordInArea(containerCoord, viewport)
-  })
-
-  console.log('viewport', viewport)
-  console.log('widgets', widgets)
-  console.log('container', container)
-
-  return container
+  }
 }
-
 
 async function addDiceToBoard(start: Coord, faces: string[], dicePerSide: number, diceSize: number, diceSpacing: number, parent?: BoardNode) {
   faces.forEach(async (face, index) => {
